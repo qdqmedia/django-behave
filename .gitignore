@@ -1,2 +1,4 @@
 ve-behave
 *.pyc
+.idea
+django_behave.egg-info
