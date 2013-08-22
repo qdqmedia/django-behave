@@ -41,6 +41,11 @@ class DjangoBehaveTestCase(LiveServerTestCase):
         super(DjangoBehaveTestCase, self).__init__(**kwargs)
         unittest.TestCase.__init__(self)
 
+    def _fixture_setup(self):
+        if _reusing_db():
+            return
+        super(DjangoBehaveTestCase, self)._fixture_setup()
+
     def get_features_dir(self):
         if isinstance(self.features_dir, basestring):
             return [self.features_dir]
