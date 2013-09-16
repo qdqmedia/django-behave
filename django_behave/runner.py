@@ -216,22 +216,25 @@ def _mysql_reset_sequences(style, connection):
 
 
 def _skip_create_test_db(self, verbosity=1, autoclobber=False):
-    """Database creation class that skips both creation and flushing
+    """``create_test_db`` implementation that skips both creation and flushing
 
     The idea is to re-use the perfectly good test DB already created by an
-    earlier test run, cutting the time spent before any tests run from 5-13
+    earlier test run, cutting the time spent before any tests run from 5-13s
     (depending on your I/O luck) down to 3.
 
     """
     # Notice that the DB supports transactions. Originally, this was done in
-    # the method this overrides. Django v1.2 does not have the confirm
-    # function. Added in https://code.djangoproject.com/ticket/12991.
-    if hasattr(self.connection.features, 'confirm') and \
-       callable(self.connection.features.confirm):
+    # the method this overrides. The confirm method was added in Django v1.3
+    # (https://code.djangoproject.com/ticket/12991) but removed in Django v1.5
+    # (https://code.djangoproject.com/ticket/17760). In Django v1.5
+    # supports_transactions is a cached property evaluated on access.
+    if callable(getattr(self.connection.features, 'confirm', None)):
+        # Django v1.3-4
         self.connection.features.confirm()
-    else:
+    elif hasattr(self, "_rollback_works"):
+        # Django v1.2 and lower
         can_rollback = self._rollback_works()
-        self.connection.settings_dict["SUPPORTS_TRANSACTIONS"] = can_rollback
+        self.connection.settings_dict['SUPPORTS_TRANSACTIONS'] = can_rollback
 
     return self._get_test_db_name()
 
